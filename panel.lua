@@ -1,5 +1,5 @@
 -- Cargar configuración
-local KeyAuth = loadstring(game:HttpGet("https://raw.githubusercontent.com/tu-usuario/tu-repo/main/config.lua"))()
+local KeyAuth = loadstring(game:HttpGet("https://raw.githubusercontent.com/denzells/verified.serios/main/config.lua"))()
 
 -- Verificar HTTP
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
