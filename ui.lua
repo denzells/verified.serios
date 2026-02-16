@@ -362,9 +362,9 @@ local savedBadge = mk("Frame", {
     Visible                = false,
 }, Body)
 rnd(5, savedBadge)
-mk("UIStroke", {Color = C.SAVED, Thickness = 1, Transparency = 0.5}, savedBadge)
+local savedBadgeStroke = mk("UIStroke", {Color = C.SAVED, Thickness = 1, Transparency = 0.5}, savedBadge)
 
-mk("TextLabel", {
+local savedBadgeLabel = mk("TextLabel", {
     Text                   = "● Credentials saved",
     Font                   = Enum.Font.GothamSemibold,
     TextSize               = 9,
@@ -464,6 +464,12 @@ local function tryLoadSaved()
         hasSavedData       = true
         savedBadge.Visible = true
 
+        -- Fade in the whole badge
+        tween(savedBadge,       0.3, {BackgroundTransparency = 0.3})
+        tween(savedBadgeStroke, 0.3, {Transparency = 0.5})
+        tween(savedBadgeLabel,  0.3, {TextTransparency = 0})
+        tween(clearBtn,         0.3, {TextTransparency = 0})
+
         -- Blue highlight on inputs to signal auto-fill
         local uStroke = userBg:FindFirstChildOfClass("UIStroke")
         local kStroke = keyBg:FindFirstChildOfClass("UIStroke")
@@ -487,8 +493,11 @@ clearBtn.MouseButton1Click:Connect(function()
     hasSavedData       = false
     usernameInput.Text = ""
     keyInput.Text      = ""
-    tween(savedBadge, 0.2, {BackgroundTransparency = 1})
-    task.delay(0.2, function() savedBadge.Visible = false end)
+    tween(savedBadge,       0.2, {BackgroundTransparency = 1})
+    tween(savedBadgeStroke, 0.2, {Transparency = 1})
+    tween(savedBadgeLabel,  0.2, {TextTransparency = 1})
+    tween(clearBtn,         0.2, {TextTransparency = 1})
+    task.delay(0.25, function() savedBadge.Visible = false end)
 end)
 
 -- ══════════════════════════════════════════
@@ -523,8 +532,12 @@ verifyBtn.MouseButton1Click:Connect(function()
             -- Clear saved data if key was invalid
             if hasSavedData then
                 Config.clearCredentials()
-                hasSavedData       = false
-                savedBadge.Visible = false
+                hasSavedData = false
+                tween(savedBadge,       0.2, {BackgroundTransparency = 1})
+                tween(savedBadgeStroke, 0.2, {Transparency = 1})
+                tween(savedBadgeLabel,  0.2, {TextTransparency = 1})
+                tween(clearBtn,         0.2, {TextTransparency = 1})
+                task.delay(0.25, function() savedBadge.Visible = false end)
             end
             animateCircles(C.YELLOW)
         end
@@ -616,11 +629,13 @@ local function animateBodyElements(show)
     animInputBg(userContainer)
     animInputBg(keyContainer)
 
-    if hasSavedData and savedBadge.Visible then
-        tween(savedBadge, 0.2, {BackgroundTransparency = show and 0.3 or 1})
-        local bl = savedBadge:FindFirstChildOfClass("TextLabel")
-        if bl then tween(bl, 0.2, {TextTransparency = targetT}) end
-        tween(clearBtn, 0.2, {TextTransparency = targetT})
+    -- Badge: always animate, but only show if it has data and is marked visible
+    if savedBadge.Visible then
+        local badgeTarget = (show and hasSavedData) and 0 or 1
+        tween(savedBadge,       0.2, {BackgroundTransparency = badgeTarget == 0 and 0.3 or 1})
+        tween(savedBadgeStroke, 0.2, {Transparency           = badgeTarget == 0 and 0.5 or 1})
+        tween(savedBadgeLabel,  0.2, {TextTransparency       = badgeTarget})
+        tween(clearBtn,         0.2, {TextTransparency       = badgeTarget})
     end
 
     tween(verifyBtn, 0.2, {
@@ -738,6 +753,11 @@ ClsB.TextTransparency      = 1
 for _, circle in ipairs(circles) do
     circle.BackgroundTransparency = 1
 end
+-- Badge starts fully hidden regardless
+savedBadge.BackgroundTransparency = 1
+savedBadgeStroke.Transparency     = 1
+savedBadgeLabel.TextTransparency  = 1
+clearBtn.TextTransparency         = 1
 animateBodyElements(false)
 
 tween(Win,       0.4,  {Size = UDim2.new(0, WW, 0, TH), BackgroundTransparency = 0.15}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
