@@ -330,7 +330,7 @@ rnd(5, savedBadge)
 mk("UIStroke", {Color = C.SAVED, Thickness = 1, Transparency = 0.5}, savedBadge)
 
 mk("TextLabel", {
-    Text                   = "● Datos guardados",
+    Text                   = "●  Saved Data",
     Font                   = Enum.Font.GothamSemibold,
     TextSize               = 9,
     TextColor3             = C.SAVED,
