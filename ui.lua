@@ -455,26 +455,12 @@ end
 
 -- ══════════════════════════════════════════
 --   AUTO-FILL SAVED CREDENTIALS
+--   (animateBodyElements defined further below,
+--    tryLoadSaved is always called via task.delay
+--    so it runs after the full script is loaded)
 -- ══════════════════════════════════════════
 local hasSavedData = false
-
-local function tryLoadSaved()
-    local savedUser, savedKey = Config.loadCredentials()
-    if savedUser and savedKey and savedUser ~= "" and savedKey ~= "" then
-        fillUsername(savedUser)
-        fillKey(savedKey)
-        hasSavedData = true
-        animateBodyElements(true)
-
-        -- Tint icons blue briefly to signal auto-fill (no stroke changes)
-        tween(userIcon, 0.4, {ImageColor3 = C.SAVED})
-        tween(keyIcon,  0.4, {ImageColor3 = C.SAVED})
-        task.delay(2, function()
-            tween(userIcon, 0.4, {ImageColor3 = C.MUTED})
-            tween(keyIcon,  0.4, {ImageColor3 = C.MUTED})
-        end)
-    end
-end
+local tryLoadSaved  -- forward declaration
 
 -- Clear saved credentials button
 clearBtn.MouseButton1Click:Connect(function()
@@ -650,6 +636,25 @@ local function animateBodyElements(show)
     })
     local btnStroke = verifyBtn:FindFirstChildOfClass("UIStroke")
     if btnStroke then tween(btnStroke, 0.2, {Transparency = show and 0.4 or 1}) end
+end
+
+-- Defined here so it can call animateBodyElements (defined just above)
+tryLoadSaved = function()
+    local savedUser, savedKey = Config.loadCredentials()
+    if savedUser and savedKey and savedUser ~= "" and savedKey ~= "" then
+        fillUsername(savedUser)
+        fillKey(savedKey)
+        hasSavedData = true
+        animateBodyElements(true)
+
+        -- Tint icons blue briefly to signal auto-fill
+        tween(userIcon, 0.4, {ImageColor3 = C.SAVED})
+        tween(keyIcon,  0.4, {ImageColor3 = C.SAVED})
+        task.delay(2, function()
+            tween(userIcon, 0.4, {ImageColor3 = C.MUTED})
+            tween(keyIcon,  0.4, {ImageColor3 = C.MUTED})
+        end)
+    end
 end
 
 -- ══════════════════════════════════════════
