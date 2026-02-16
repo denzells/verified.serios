@@ -1,95 +1,61 @@
--- KEYAUTH CONFIG + LOADER + CREDENTIAL SAVING
--- File: config.lua
+-- config.lua - ACTUALIZACIÓN OPCIONAL
+-- Solo añadir estas modificaciones si quieres mostrar fecha de expiración
+-- Si no, el panel mostrará "N/A" en expiry
 
 local HttpService = game:GetService("HttpService")
 
--- ══════════════════════════════════════════
---   KEYAUTH CONFIG
--- ══════════════════════════════════════════
 local KeyAuthConfig = {
     Name    = "serios.gg",
     OwnerID = "UPGTkUDkee",
     Version = "1.0"
 }
 local KeyAuthURL = "https://keyauth.win/api/1.2/"
-
--- ══════════════════════════════════════════
---   LOADER
--- ══════════════════════════════════════════
 local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/denzells/panel/main/main.lua"
 
--- ══════════════════════════════════════════
---   HTTP REQUEST (multi-executor support)
--- ══════════════════════════════════════════
-local httpRequest = (syn and syn.request)
-    or (http and http.request)
-    or http_request
-    or (fluxus and fluxus.request)
-    or request
+local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
--- ══════════════════════════════════════════
---   CREDENTIAL SAVING SYSTEM
--- ══════════════════════════════════════════
 local SAVE_FILE = "serios_saved.json"
+local canSave = typeof(writefile) == "function" and typeof(readfile) == "function" and typeof(isfile) == "function"
 
-local canSave = (
-    typeof(writefile) == "function" and
-    typeof(readfile)  == "function" and
-    typeof(isfile)    == "function"
-)
-
-local function saveCredentials(username, key)
+-- FUNCIÓN ACTUALIZADA: Ahora recibe expiry
+local function saveCredentials(username, key, expiry)
     if not canSave then return end
-    local ok = pcall(function()
+    pcall(function()
         writefile(SAVE_FILE, HttpService:JSONEncode({
             username = username,
-            key      = key
+            key      = key,
+            expiry   = expiry
         }))
     end)
-    if not ok then
-        warn("[serios.gg] Failed to save credentials.")
-    end
 end
 
 local function loadCredentials()
     if not canSave then return nil, nil end
-
     local ok, result = pcall(function()
         if not isfile(SAVE_FILE) then return nil end
         return HttpService:JSONDecode(readfile(SAVE_FILE))
     end)
-
     if ok and result and result.username and result.key then
         return result.username, result.key
     end
-
     return nil, nil
 end
 
 local function clearCredentials()
     if not canSave then return end
     pcall(function()
-        if isfile(SAVE_FILE) then
-            writefile(SAVE_FILE, "{}")
-        end
+        if isfile(SAVE_FILE) then writefile(SAVE_FILE, "{}") end
     end)
 end
 
--- ══════════════════════════════════════════
---   VERIFICATION FUNCTION
--- ══════════════════════════════════════════
+-- FUNCIÓN ACTUALIZADA: Extrae y guarda expiry
 local function verifyWithKeyAuth(username, key, callback)
     if username == "" or key == "" then
         callback(false, "empty")
         return
     end
 
-    -- Step 1: Initialize session
-    local initBody = "type=init"
-        .. "&name="    .. KeyAuthConfig.Name
-        .. "&ownerid=" .. KeyAuthConfig.OwnerID
-        .. "&version=" .. KeyAuthConfig.Version
-
+    local initBody = "type=init&name=" .. KeyAuthConfig.Name .. "&ownerid=" .. KeyAuthConfig.OwnerID .. "&version=" .. KeyAuthConfig.Version
     local initOk, initRes = pcall(function()
         return httpRequest({
             Url     = KeyAuthURL,
@@ -104,24 +70,13 @@ local function verifyWithKeyAuth(username, key, callback)
         return
     end
 
-    local initData
-    local parseOk = pcall(function()
-        initData = HttpService:JSONDecode(initRes.Body)
-    end)
-
-    if not parseOk or not initData.success or not initData.sessionid then
+    local initData = pcall(function() return HttpService:JSONDecode(initRes.Body) end) and HttpService:JSONDecode(initRes.Body)
+    if not initData or not initData.success or not initData.sessionid then
         callback(false, "init_failed")
         return
     end
 
-    -- Step 2: Login with username + key
-    local loginBody = "type=login"
-        .. "&username=" .. username
-        .. "&pass="     .. key
-        .. "&sessionid=" .. initData.sessionid
-        .. "&name="     .. KeyAuthConfig.Name
-        .. "&ownerid="  .. KeyAuthConfig.OwnerID
-
+    local loginBody = "type=login&username=" .. username .. "&pass=" .. key .. "&sessionid=" .. initData.sessionid .. "&name=" .. KeyAuthConfig.Name .. "&ownerid=" .. KeyAuthConfig.OwnerID
     local loginOk, loginRes = pcall(function()
         return httpRequest({
             Url     = KeyAuthURL,
@@ -136,39 +91,28 @@ local function verifyWithKeyAuth(username, key, callback)
         return
     end
 
-    local loginData
-    parseOk = pcall(function()
-        loginData = HttpService:JSONDecode(loginRes.Body)
-    end)
-
-    if not parseOk then
+    local loginData = pcall(function() return HttpService:JSONDecode(loginRes.Body) end) and HttpService:JSONDecode(loginRes.Body)
+    if not loginData then
         callback(false, "parse_error")
         return
     end
 
-    -- Save credentials on successful login
+    -- NUEVO: Extraer expiry de KeyAuth
     if loginData.success then
-        saveCredentials(username, key)
+        local expiry = "N/A"
+        if loginData.info and loginData.info.subscriptions and loginData.info.subscriptions[1] then
+            expiry = loginData.info.subscriptions[1].expiry or "N/A"
+        end
+        saveCredentials(username, key, expiry)
     end
 
     callback(loginData.success, loginData.message or (loginData.success and "Verified" or "invalid"))
 end
 
--- ══════════════════════════════════════════
---   MAIN SCRIPT LOADER
--- ══════════════════════════════════════════
 local function loadMainScript()
-    local ok, err = pcall(function()
-        loadstring(game:HttpGet(MAIN_SCRIPT_URL))()
-    end)
-    if not ok then
-        warn("[serios.gg] Failed to load main.lua: " .. tostring(err))
-    end
+    pcall(function() loadstring(game:HttpGet(MAIN_SCRIPT_URL))() end)
 end
 
--- ══════════════════════════════════════════
---   EXPORTS
--- ══════════════════════════════════════════
 return {
     verify           = verifyWithKeyAuth,
     loadMain         = loadMainScript,
