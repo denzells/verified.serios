@@ -40,17 +40,17 @@ local ICON_KEY      = "rbxassetid://126448589402910"
 --   COLORS
 -- ══════════════════════════════════════════
 local C = {
-    WIN   = Color3.fromRGB(12, 12, 12),
-    TBAR  = Color3.fromRGB(8, 8, 8),
-    LINE  = Color3.fromRGB(42, 42, 42),
-    RED   = Color3.fromRGB(205, 30, 30),
-    WHITE = Color3.fromRGB(235, 235, 235),
-    GRAY  = Color3.fromRGB(110, 110, 110),
-    MUTED = Color3.fromRGB(55, 55, 55),
-    INPUT = Color3.fromRGB(18, 18, 18),
-    GREEN = Color3.fromRGB(50, 200, 80),
-    YELLOW= Color3.fromRGB(255, 200, 50),
-    SAVED = Color3.fromRGB(50, 150, 255),
+    WIN    = Color3.fromRGB(12, 12, 12),
+    TBAR   = Color3.fromRGB(8, 8, 8),
+    LINE   = Color3.fromRGB(42, 42, 42),
+    RED    = Color3.fromRGB(205, 30, 30),
+    WHITE  = Color3.fromRGB(235, 235, 235),
+    GRAY   = Color3.fromRGB(110, 110, 110),
+    MUTED  = Color3.fromRGB(55, 55, 55),
+    INPUT  = Color3.fromRGB(18, 18, 18),
+    GREEN  = Color3.fromRGB(50, 200, 80),
+    YELLOW = Color3.fromRGB(255, 200, 50),
+    SAVED  = Color3.fromRGB(50, 150, 255),
 }
 
 -- ══════════════════════════════════════════
@@ -71,7 +71,7 @@ local function rnd(radius, parent)
     c.Parent = parent
 end
 
-local function tween(obj, time, props, easing, direction)
+local function tw(obj, time, props, easing, direction)
     local t = TweenService:Create(obj,
         TweenInfo.new(time, easing or Enum.EasingStyle.Quart, direction or Enum.EasingDirection.Out),
         props)
@@ -116,7 +116,7 @@ rnd(14, Win)
 local WinStroke = mk("UIStroke", {
     Color        = C.LINE,
     Thickness    = 1,
-    Transparency = 0
+    Transparency = 0,
 }, Win)
 
 -- ══════════════════════════════════════════
@@ -133,7 +133,6 @@ local TBar = mk("Frame", {
 }, Win)
 rnd(14, TBar)
 
--- Bottom filler so titlebar corners don't show at the bottom
 mk("Frame", {
     Size                   = UDim2.new(1, 0, 0, 14),
     Position               = UDim2.new(0, 0, 1, -14),
@@ -144,13 +143,12 @@ mk("Frame", {
     Active                 = false,
 }, TBar)
 
--- Red dot
 local rdot = mk("Frame", {
     Size             = UDim2.new(0, 10, 0, 10),
     Position         = UDim2.new(0, 14, 0.5, -5),
     BackgroundColor3 = C.RED,
     BorderSizePixel  = 0,
-    ZIndex           = 8
+    ZIndex           = 8,
 }, TBar)
 rnd(5, rdot)
 
@@ -163,7 +161,7 @@ local title1 = mk("TextLabel", {
     Size                   = UDim2.new(0, 100, 0, TH),
     Position               = UDim2.new(0, 30, 0, 0),
     TextXAlignment         = Enum.TextXAlignment.Left,
-    ZIndex                 = 8
+    ZIndex                 = 8,
 }, TBar)
 
 local title2 = mk("TextLabel", {
@@ -175,12 +173,9 @@ local title2 = mk("TextLabel", {
     Size                   = UDim2.new(0, 14, 0, TH),
     Position               = UDim2.new(0, 133, 0, 0),
     TextXAlignment         = Enum.TextXAlignment.Left,
-    ZIndex                 = 8
+    ZIndex                 = 8,
 }, TBar)
 
--- ══════════════════════════════════════════
---   MINIMIZE / CLOSE BUTTONS
--- ══════════════════════════════════════════
 local MinB = mk("TextButton", {
     Text                   = "─",
     Font                   = Enum.Font.GothamBold,
@@ -191,7 +186,7 @@ local MinB = mk("TextButton", {
     Size                   = UDim2.new(0, 36, 0, TH),
     Position               = UDim2.new(0, WW-72, 0, 0),
     ZIndex                 = 8,
-    AutoButtonColor        = false
+    AutoButtonColor        = false,
 }, TBar)
 
 local ClsB = mk("TextButton", {
@@ -204,13 +199,13 @@ local ClsB = mk("TextButton", {
     Size                   = UDim2.new(0, 36, 0, TH),
     Position               = UDim2.new(0, WW-36, 0, 0),
     ZIndex                 = 8,
-    AutoButtonColor        = false
+    AutoButtonColor        = false,
 }, TBar)
 
-ClsB.MouseEnter:Connect(function() tween(ClsB, 0.1, {TextColor3 = C.RED}) end)
-ClsB.MouseLeave:Connect(function() tween(ClsB, 0.1, {TextColor3 = C.GRAY}) end)
-MinB.MouseEnter:Connect(function() tween(MinB, 0.1, {TextColor3 = C.WHITE}) end)
-MinB.MouseLeave:Connect(function() tween(MinB, 0.1, {TextColor3 = C.GRAY}) end)
+ClsB.MouseEnter:Connect(function() tw(ClsB, 0.1, {TextColor3 = C.RED}) end)
+ClsB.MouseLeave:Connect(function() tw(ClsB, 0.1, {TextColor3 = C.GRAY}) end)
+MinB.MouseEnter:Connect(function() tw(MinB, 0.1, {TextColor3 = C.WHITE}) end)
+MinB.MouseLeave:Connect(function() tw(MinB, 0.1, {TextColor3 = C.GRAY}) end)
 
 -- ══════════════════════════════════════════
 --   BODY
@@ -224,7 +219,7 @@ local Body = mk("Frame", {
 }, Win)
 
 -- ══════════════════════════════════════════
---   INPUT CREATOR  (with icon inside)
+--   INPUT CREATOR
 -- ══════════════════════════════════════════
 local function CreateInput(parent, labelText, yPos, isPassword, iconId)
     local container = mk("Frame", {
@@ -232,7 +227,7 @@ local function CreateInput(parent, labelText, yPos, isPassword, iconId)
         Position               = UDim2.new(0, 0, 0, yPos),
         BackgroundTransparency = 1,
         BorderSizePixel        = 0,
-        ZIndex                 = 5
+        ZIndex                 = 5,
     }, parent)
 
     mk("TextLabel", {
@@ -243,7 +238,7 @@ local function CreateInput(parent, labelText, yPos, isPassword, iconId)
         BackgroundTransparency = 1,
         Size                   = UDim2.new(1, 0, 0, 16),
         TextXAlignment         = Enum.TextXAlignment.Left,
-        ZIndex                 = 6
+        ZIndex                 = 6,
     }, container)
 
     local inputBg = mk("Frame", {
@@ -252,12 +247,11 @@ local function CreateInput(parent, labelText, yPos, isPassword, iconId)
         BackgroundColor3       = C.INPUT,
         BackgroundTransparency = 0.2,
         BorderSizePixel        = 0,
-        ZIndex                 = 6
+        ZIndex                 = 6,
     }, container)
     rnd(6, inputBg)
     mk("UIStroke", {Color = C.LINE, Thickness = 1, Transparency = 0.6}, inputBg)
 
-    -- Icon inside the input (left side)
     local iconSize = 18
     local iconPad  = 8
 
@@ -267,20 +261,18 @@ local function CreateInput(parent, labelText, yPos, isPassword, iconId)
         Position               = UDim2.new(0, iconPad, 0.5, -iconSize/2),
         BackgroundTransparency = 1,
         ImageColor3            = C.MUTED,
-        ZIndex                 = 8
+        ZIndex                 = 8,
     }, inputBg)
 
-    -- Separator line after icon
     mk("Frame", {
         Size                   = UDim2.new(0, 1, 0, 16),
         Position               = UDim2.new(0, iconPad + iconSize + 6, 0.5, -8),
         BackgroundColor3       = C.LINE,
         BackgroundTransparency = 0.3,
         BorderSizePixel        = 0,
-        ZIndex                 = 8
+        ZIndex                 = 8,
     }, inputBg)
 
-    -- Text offset to make room for icon + separator
     local textOffsetLeft = iconPad + iconSize + 14
 
     local input = mk("TextBox", {
@@ -295,7 +287,7 @@ local function CreateInput(parent, labelText, yPos, isPassword, iconId)
         Position               = UDim2.new(0, textOffsetLeft, 0, 0),
         TextXAlignment         = Enum.TextXAlignment.Left,
         ClearTextOnFocus       = false,
-        ZIndex                 = 7
+        ZIndex                 = 7,
     }, inputBg)
 
     local realText = ""
@@ -306,31 +298,24 @@ local function CreateInput(parent, labelText, yPos, isPassword, iconId)
             input.Text = string.rep("•", #realText)
         end)
         input:GetPropertyChangedSignal("Text"):Connect(function()
-            if input:IsFocused() then
-                realText = input.Text
-            end
+            if input:IsFocused() then realText = input.Text end
         end)
     end
 
-    -- Focus / unfocus highlight
     input.Focused:Connect(function()
-        tween(inputBg, 0.15, {BackgroundColor3 = Color3.fromRGB(22,22,22), BackgroundTransparency = 0.1})
-        tween(icon, 0.15, {ImageColor3 = C.WHITE})
-        local stroke = inputBg:FindFirstChildOfClass("UIStroke")
-        if stroke then tween(stroke, 0.15, {Color = C.RED, Transparency = 0.4}) end
+        tw(inputBg, 0.15, {BackgroundColor3 = Color3.fromRGB(22,22,22), BackgroundTransparency = 0.1})
+        tw(icon, 0.15, {ImageColor3 = C.WHITE})
+        local s = inputBg:FindFirstChildOfClass("UIStroke")
+        if s then tw(s, 0.15, {Color = C.RED, Transparency = 0.4}) end
     end)
-
     input.FocusLost:Connect(function()
-        tween(inputBg, 0.15, {BackgroundColor3 = C.INPUT, BackgroundTransparency = 0.2})
-        tween(icon, 0.15, {ImageColor3 = C.MUTED})
-        local stroke = inputBg:FindFirstChildOfClass("UIStroke")
-        if stroke then tween(stroke, 0.15, {Color = C.LINE, Transparency = 0.6}) end
+        tw(inputBg, 0.15, {BackgroundColor3 = C.INPUT, BackgroundTransparency = 0.2})
+        tw(icon, 0.15, {ImageColor3 = C.MUTED})
+        local s = inputBg:FindFirstChildOfClass("UIStroke")
+        if s then tw(s, 0.15, {Color = C.LINE, Transparency = 0.6}) end
     end)
 
-    local function getRealText()
-        return isPassword and realText or input.Text
-    end
-
+    local function getRealText() return isPassword and realText or input.Text end
     local function fill(text)
         if isPassword then
             realText   = text
@@ -345,7 +330,6 @@ end
 
 local usernameInput, userContainer, getUsernameText, userBg, fillUsername, userIcon =
     CreateInput(Body, "Username", 0,  false, ICON_USERNAME)
-
 local keyInput, keyContainer, getKeyText, keyBg, fillKey, keyIcon =
     CreateInput(Body, "Key",      66, true,  ICON_KEY)
 
@@ -356,13 +340,18 @@ local savedBadge = mk("Frame", {
     Size                   = UDim2.new(0, 120, 0, 20),
     Position               = UDim2.new(0, 0, 0, 130),
     BackgroundColor3       = Color3.fromRGB(20, 20, 20),
-    BackgroundTransparency = 1,   -- always visible, transparency-controlled only
+    BackgroundTransparency = 1,
     BorderSizePixel        = 0,
     ZIndex                 = 6,
     Visible                = true,
 }, Body)
 rnd(5, savedBadge)
-local savedBadgeStroke = mk("UIStroke", {Color = C.SAVED, Thickness = 1, Transparency = 1}, savedBadge)
+
+local savedBadgeStroke = mk("UIStroke", {
+    Color        = C.SAVED,
+    Thickness    = 1,
+    Transparency = 1,
+}, savedBadge)
 
 local savedBadgeLabel = mk("TextLabel", {
     Text                   = "● Credentials saved",
@@ -370,11 +359,11 @@ local savedBadgeLabel = mk("TextLabel", {
     TextSize               = 9,
     TextColor3             = C.SAVED,
     BackgroundTransparency = 1,
-    TextTransparency       = 1,   -- starts hidden
+    TextTransparency       = 1,
     Size                   = UDim2.new(1, -24, 1, 0),
     Position               = UDim2.new(0, 8, 0, 0),
     TextXAlignment         = Enum.TextXAlignment.Left,
-    ZIndex                 = 7
+    ZIndex                 = 7,
 }, savedBadge)
 
 local clearBtn = mk("TextButton", {
@@ -383,7 +372,7 @@ local clearBtn = mk("TextButton", {
     TextSize               = 12,
     TextColor3             = C.GRAY,
     BackgroundTransparency = 1,
-    TextTransparency       = 1,   -- starts hidden
+    TextTransparency       = 1,
     BorderSizePixel        = 0,
     Size                   = UDim2.new(0, 20, 1, 0),
     Position               = UDim2.new(1, -20, 0, 0),
@@ -391,8 +380,8 @@ local clearBtn = mk("TextButton", {
     AutoButtonColor        = false,
 }, savedBadge)
 
-clearBtn.MouseEnter:Connect(function() tween(clearBtn, 0.1, {TextColor3 = C.RED}) end)
-clearBtn.MouseLeave:Connect(function() tween(clearBtn, 0.1, {TextColor3 = C.GRAY}) end)
+clearBtn.MouseEnter:Connect(function() tw(clearBtn, 0.1, {TextColor3 = C.RED}) end)
+clearBtn.MouseLeave:Connect(function() tw(clearBtn, 0.1, {TextColor3 = C.GRAY}) end)
 
 -- ══════════════════════════════════════════
 --   VERIFY BUTTON
@@ -408,20 +397,20 @@ local verifyBtn = mk("TextButton", {
     ZIndex                 = 6,
     Size                   = UDim2.new(0.5, -5, 0, 34),
     Position               = UDim2.new(0.25, 0, 0, 162),
-    AutoButtonColor        = false
+    AutoButtonColor        = false,
 }, Body)
 rnd(6, verifyBtn)
 mk("UIStroke", {Color = Color3.fromRGB(255,50,50), Thickness = 1, Transparency = 0.4}, verifyBtn)
 
 -- ══════════════════════════════════════════
---   STATUS CIRCLES (titlebar)
+--   STATUS CIRCLES
 -- ══════════════════════════════════════════
 local statusContainer = mk("Frame", {
     Size                   = UDim2.new(0, 46, 0, 10),
     Position               = UDim2.new(0, 149, 0.5, -5),
     BackgroundTransparency = 1,
     BorderSizePixel        = 0,
-    ZIndex                 = 8
+    ZIndex                 = 8,
 }, TBar)
 
 local circles = {}
@@ -432,48 +421,148 @@ for i = 1, 3 do
         BackgroundColor3       = C.WHITE,
         BackgroundTransparency = 0.3,
         BorderSizePixel        = 0,
-        ZIndex                 = 9
+        ZIndex                 = 9,
     }, statusContainer)
     rnd(5, circle)
     circles[i] = circle
 end
 
 local function resetCircles()
-    for _, circle in ipairs(circles) do
-        tween(circle, 0.2, {BackgroundColor3 = C.WHITE, BackgroundTransparency = 0.3})
+    for _, c in ipairs(circles) do
+        tw(c, 0.2, {BackgroundColor3 = C.WHITE, BackgroundTransparency = 0.3})
     end
 end
 
 local function animateCircles(color)
-    for i, circle in ipairs(circles) do
-        task.delay((i-1) * 0.08, function()
-            tween(circle, 0.3, {BackgroundColor3 = color, BackgroundTransparency = 0})
+    for i, c in ipairs(circles) do
+        task.delay((i-1)*0.08, function()
+            tw(c, 0.3, {BackgroundColor3 = color, BackgroundTransparency = 0})
         end)
     end
     task.delay(1, resetCircles)
 end
 
 -- ══════════════════════════════════════════
---   AUTO-FILL SAVED CREDENTIALS
---   (animateBodyElements defined further below,
---    tryLoadSaved is always called via task.delay
---    so it runs after the full script is loaded)
+--   STATE
 -- ══════════════════════════════════════════
-local hasSavedData        = false
-local tryLoadSaved            -- forward declaration
-local animateBodyElements     -- forward declaration
+local hasSavedData = false
+local minimized    = false
+local animating    = false
+local hidden       = false
 
--- Clear saved credentials button
+-- ══════════════════════════════════════════
+--   BODY ANIMATION  ← defined first so
+--   everything below can call it freely
+-- ══════════════════════════════════════════
+local function animateBodyElements(show)
+    local targetT = show and 0 or 1
+
+    local function animLabels(container)
+        for _, child in ipairs(container:GetChildren()) do
+            if child:IsA("TextLabel") then
+                tw(child, 0.2, {TextTransparency = targetT})
+            end
+        end
+    end
+
+    local function animInputBg(container)
+        for _, child in ipairs(container:GetChildren()) do
+            if child:IsA("Frame") then
+                tw(child, 0.2, {BackgroundTransparency = show and 0.2 or 1})
+                local stroke = child:FindFirstChildOfClass("UIStroke")
+                if stroke then tw(stroke, 0.2, {Transparency = show and 0.6 or 1}) end
+                local textbox = child:FindFirstChildOfClass("TextBox")
+                if textbox then
+                    tw(textbox, 0.2, {
+                        TextTransparency  = targetT,
+                        PlaceholderColor3 = show and C.MUTED or Color3.fromRGB(0,0,0),
+                    })
+                end
+                local img = child:FindFirstChildOfClass("ImageLabel")
+                if img then tw(img, 0.2, {ImageTransparency = targetT}) end
+            end
+        end
+    end
+
+    animLabels(userContainer)
+    animLabels(keyContainer)
+    animInputBg(userContainer)
+    animInputBg(keyContainer)
+
+    do
+        local badgeT = (show and hasSavedData) and 0 or 1
+        tw(savedBadge,       0.2, {BackgroundTransparency = badgeT == 0 and 0.3 or 1})
+        tw(savedBadgeStroke, 0.2, {Transparency           = badgeT == 0 and 0.5 or 1})
+        tw(savedBadgeLabel,  0.2, {TextTransparency       = badgeT})
+        tw(clearBtn,         0.2, {TextTransparency       = badgeT})
+    end
+
+    tw(verifyBtn, 0.2, {
+        BackgroundTransparency = show and 0.1 or 1,
+        TextTransparency       = targetT,
+        Size = show and UDim2.new(0.5, -5, 0, 34) or UDim2.new(0.5, -5, 0, 0),
+    })
+    local btnStroke = verifyBtn:FindFirstChildOfClass("UIStroke")
+    if btnStroke then tw(btnStroke, 0.2, {Transparency = show and 0.4 or 1}) end
+end
+
+-- ══════════════════════════════════════════
+--   FULL FADE (used by close / success / hide)
+-- ══════════════════════════════════════════
+local function fadeAll(out, duration, callback)
+    local T = out and 1 or 0
+    local BT = out and 1 or 0
+    tw(Win,       duration, {BackgroundTransparency = BT}, Enum.EasingStyle.Sine)
+    tw(WinStroke, duration, {Transparency = BT},           Enum.EasingStyle.Sine)
+    tw(rdot,      duration, {BackgroundTransparency = BT}, Enum.EasingStyle.Sine)
+    tw(title1,    duration, {TextTransparency = T},        Enum.EasingStyle.Sine)
+    tw(title2,    duration, {TextTransparency = T},        Enum.EasingStyle.Sine)
+    tw(MinB,      duration, {TextTransparency = T},        Enum.EasingStyle.Sine)
+    tw(ClsB,      duration, {TextTransparency = T},        Enum.EasingStyle.Sine)
+    for _, c in ipairs(circles) do
+        tw(c, duration, {BackgroundTransparency = out and 1 or 0.3}, Enum.EasingStyle.Sine)
+    end
+    animateBodyElements(not out)
+    if callback then
+        task.delay(duration + 0.05, callback)
+    end
+end
+
+-- ══════════════════════════════════════════
+--   AUTO-FILL SAVED CREDENTIALS
+-- ══════════════════════════════════════════
+local function tryLoadSaved()
+    local savedUser, savedKey = Config.loadCredentials()
+    if savedUser and savedKey and savedUser ~= "" and savedKey ~= "" then
+        fillUsername(savedUser)
+        fillKey(savedKey)
+        hasSavedData = true
+        animateBodyElements(true)
+        tw(userIcon, 0.4, {ImageColor3 = C.SAVED})
+        tw(keyIcon,  0.4, {ImageColor3 = C.SAVED})
+        task.delay(2, function()
+            tw(userIcon, 0.4, {ImageColor3 = C.MUTED})
+            tw(keyIcon,  0.4, {ImageColor3 = C.MUTED})
+        end)
+    end
+end
+
+-- ══════════════════════════════════════════
+--   CLEAR BADGE
+-- ══════════════════════════════════════════
+local function hideBadge()
+    tw(savedBadge,       0.2, {BackgroundTransparency = 1})
+    tw(savedBadgeStroke, 0.2, {Transparency = 1})
+    tw(savedBadgeLabel,  0.2, {TextTransparency = 1})
+    tw(clearBtn,         0.2, {TextTransparency = 1})
+end
+
 clearBtn.MouseButton1Click:Connect(function()
     Config.clearCredentials()
     hasSavedData       = false
     usernameInput.Text = ""
     keyInput.Text      = ""
-    -- Re-run body animation which will now hide the badge (hasSavedData=false)
-    tween(savedBadge,       0.2, {BackgroundTransparency = 1})
-    tween(savedBadgeStroke, 0.2, {Transparency = 1})
-    tween(savedBadgeLabel,  0.2, {TextTransparency = 1})
-    tween(clearBtn,         0.2, {TextTransparency = 1})
+    hideBadge()
 end)
 
 -- ══════════════════════════════════════════
@@ -483,10 +572,9 @@ verifyBtn.MouseButton1Click:Connect(function()
     local username = getUsernameText()
     local key      = getKeyText()
 
-    -- Click animation
-    tween(verifyBtn, 0.08, {Size = UDim2.new(0.5, -9, 0, 30)})
+    tw(verifyBtn, 0.08, {Size = UDim2.new(0.5, -9, 0, 30)})
     task.delay(0.08, function()
-        tween(verifyBtn, 0.12, {Size = UDim2.new(0.5, -5, 0, 34)})
+        tw(verifyBtn, 0.12, {Size = UDim2.new(0.5, -5, 0, 34)})
     end)
 
     verifyBtn.Active = false
@@ -500,36 +588,17 @@ verifyBtn.MouseButton1Click:Connect(function()
             animateCircles(C.RED)
         elseif success then
             animateCircles(C.GREEN)
-
-            -- Simple fade out after a short pause
             task.delay(0.8, function()
-                local fadeT = 0.5
-                tween(Win,       fadeT, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
-                tween(WinStroke, fadeT, {Transparency = 1},           Enum.EasingStyle.Sine)
-                tween(rdot,      fadeT, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
-                tween(title1,    fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-                tween(title2,    fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-                tween(MinB,      fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-                tween(ClsB,      fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-                for _, circle in ipairs(circles) do
-                    tween(circle, fadeT, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
-                end
-                animateBodyElements(false)
-
-                task.delay(fadeT + 0.05, function()
+                fadeAll(true, 0.5, function()
                     SG:Destroy()
                     Config.loadMain()
                 end)
             end)
         else
-            -- Clear saved data if key was invalid
             if hasSavedData then
                 Config.clearCredentials()
                 hasSavedData = false
-                tween(savedBadge,       0.2, {BackgroundTransparency = 1})
-                tween(savedBadgeStroke, 0.2, {Transparency = 1})
-                tween(savedBadgeLabel,  0.2, {TextTransparency = 1})
-                tween(clearBtn,         0.2, {TextTransparency = 1})
+                hideBadge()
             end
             animateCircles(C.YELLOW)
         end
@@ -560,13 +629,11 @@ do
         mStart   = mp
         wStart   = Vector2.new(Win.Position.X.Offset, Win.Position.Y.Offset)
     end)
-
     UIS.InputEnded:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = false
         end
     end)
-
     RunService.RenderStepped:Connect(function()
         if not dragging then return end
         local mp = UIS:GetMouseLocation()
@@ -584,86 +651,8 @@ do
 end
 
 -- ══════════════════════════════════════════
---   BODY ANIMATION (show / hide)
+--   MINIMIZE
 -- ══════════════════════════════════════════
-animateBodyElements = function(show)
-    local targetT = show and 0 or 1
-
-    local function animLabels(container)
-        for _, child in ipairs(container:GetChildren()) do
-            if child:IsA("TextLabel") then
-                tween(child, 0.2, {TextTransparency = targetT})
-            end
-        end
-    end
-
-    local function animInputBg(container)
-        for _, child in ipairs(container:GetChildren()) do
-            if child:IsA("Frame") then
-                tween(child, 0.2, {BackgroundTransparency = show and 0.2 or 1})
-                local stroke = child:FindFirstChildOfClass("UIStroke")
-                if stroke then tween(stroke, 0.2, {Transparency = show and 0.6 or 1}) end
-                local textbox = child:FindFirstChildOfClass("TextBox")
-                if textbox then
-                    tween(textbox, 0.2, {
-                        TextTransparency  = targetT,
-                        PlaceholderColor3 = show and C.MUTED or Color3.fromRGB(0,0,0)
-                    })
-                end
-                local img = child:FindFirstChildOfClass("ImageLabel")
-                if img then tween(img, 0.2, {ImageTransparency = targetT}) end
-            end
-        end
-    end
-
-    animLabels(userContainer)
-    animLabels(keyContainer)
-    animInputBg(userContainer)
-    animInputBg(keyContainer)
-
-    -- Badge always animates in sync — only shows content when hasSavedData is true
-    do
-        local badgeT = (show and hasSavedData) and 0 or 1
-        tween(savedBadge,       0.2, {BackgroundTransparency = badgeT == 0 and 0.3 or 1})
-        tween(savedBadgeStroke, 0.2, {Transparency           = badgeT == 0 and 0.5 or 1})
-        tween(savedBadgeLabel,  0.2, {TextTransparency       = badgeT})
-        tween(clearBtn,         0.2, {TextTransparency       = badgeT})
-    end
-
-    tween(verifyBtn, 0.2, {
-        BackgroundTransparency = show and 0.1 or 1,
-        TextTransparency       = targetT,
-        Size = show and UDim2.new(0.5, -5, 0, 34) or UDim2.new(0.5, -5, 0, 0)
-    })
-    local btnStroke = verifyBtn:FindFirstChildOfClass("UIStroke")
-    if btnStroke then tween(btnStroke, 0.2, {Transparency = show and 0.4 or 1}) end
-end
-
--- Defined here so it can call animateBodyElements (defined just above)
-tryLoadSaved = function()
-    local savedUser, savedKey = Config.loadCredentials()
-    if savedUser and savedKey and savedUser ~= "" and savedKey ~= "" then
-        fillUsername(savedUser)
-        fillKey(savedKey)
-        hasSavedData = true
-        animateBodyElements(true)
-
-        -- Tint icons blue briefly to signal auto-fill
-        tween(userIcon, 0.4, {ImageColor3 = C.SAVED})
-        tween(keyIcon,  0.4, {ImageColor3 = C.SAVED})
-        task.delay(2, function()
-            tween(userIcon, 0.4, {ImageColor3 = C.MUTED})
-            tween(keyIcon,  0.4, {ImageColor3 = C.MUTED})
-        end)
-    end
-end
-
--- ══════════════════════════════════════════
---   MINIMIZE / CLOSE
--- ══════════════════════════════════════════
-local minimized = false
-local animating = false
-
 MinB.MouseButton1Click:Connect(function()
     if animating then return end
     animating = true
@@ -671,16 +660,16 @@ MinB.MouseButton1Click:Connect(function()
 
     if minimized then
         animateBodyElements(false)
-        tween(Body,      0.3,  {Size = UDim2.new(1, -40, 0, 0)},           Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(Win,       0.3,  {Size = UDim2.new(0, WW, 0, TH)},           Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(title1,    0.2,  {TextTransparency = 0.5})
-        tween(title2,    0.2,  {TextTransparency = 0.5})
+        tw(Body,  0.3, {Size = UDim2.new(1, -40, 0, 0)},      Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tw(Win,   0.3, {Size = UDim2.new(0, WW, 0, TH)},      Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tw(title1, 0.2, {TextTransparency = 0.5})
+        tw(title2, 0.2, {TextTransparency = 0.5})
         task.delay(0.35, function() animating = false end)
     else
-        tween(Win,       0.35, {Size = UDim2.new(0, WW, 0, WH)},           Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(Body,      0.35, {Size = UDim2.new(1, -40, 1, -TH-60)},      Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(title1,    0.25, {TextTransparency = 0})
-        tween(title2,    0.25, {TextTransparency = 0})
+        tw(Win,  0.35, {Size = UDim2.new(0, WW, 0, WH)},      Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tw(Body, 0.35, {Size = UDim2.new(1, -40, 1, -TH-60)}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tw(title1, 0.25, {TextTransparency = 0})
+        tw(title2, 0.25, {TextTransparency = 0})
         task.delay(0.15, function() animateBodyElements(true) end)
         task.delay(0.5,  function() animating = false end)
     end
@@ -688,25 +677,14 @@ MinB.MouseButton1Click:Connect(function()
     MinB.Text = minimized and "□" or "─"
 end)
 
+-- ══════════════════════════════════════════
+--   CLOSE
+-- ══════════════════════════════════════════
 local function doClose()
     if animating then return end
     animating  = true
     Win.Active = false
-
-    local fadeT = 0.4
-    tween(Win,       fadeT, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
-    tween(WinStroke, fadeT, {Transparency = 1},           Enum.EasingStyle.Sine)
-    tween(rdot,      fadeT, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
-    tween(title1,    fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-    tween(title2,    fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-    tween(MinB,      fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-    tween(ClsB,      fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-    for _, circle in ipairs(circles) do
-        tween(circle, fadeT, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
-    end
-    animateBodyElements(false)
-
-    task.delay(fadeT + 0.05, function() SG:Destroy() end)
+    fadeAll(true, 0.4, function() SG:Destroy() end)
 end
 
 ClsB.MouseButton1Click:Connect(doClose)
@@ -714,40 +692,16 @@ ClsB.MouseButton1Click:Connect(doClose)
 -- ══════════════════════════════════════════
 --   HOTKEYS  (RightShift = hide | End = close)
 -- ══════════════════════════════════════════
-local hidden = false
 UIS.InputBegan:Connect(function(i, gp)
     if gp or animating then return end
 
     if i.KeyCode == Enum.KeyCode.RightShift then
         hidden = not hidden
         if hidden then
-            local fadeT = 0.3
-            tween(Win,       fadeT, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
-            tween(WinStroke, fadeT, {Transparency = 1},           Enum.EasingStyle.Sine)
-            tween(rdot,      fadeT, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
-            tween(title1,    fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-            tween(title2,    fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-            tween(MinB,      fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-            tween(ClsB,      fadeT, {TextTransparency = 1},       Enum.EasingStyle.Sine)
-            for _, circle in ipairs(circles) do
-                tween(circle, fadeT, {BackgroundTransparency = 1}, Enum.EasingStyle.Sine)
-            end
-            animateBodyElements(false)
-            task.delay(fadeT + 0.05, function() Win.Visible = false end)
+            fadeAll(true, 0.3, function() Win.Visible = false end)
         else
             Win.Visible = true
-            local fadeT = 0.35
-            tween(Win,       fadeT, {BackgroundTransparency = 0},    Enum.EasingStyle.Sine)
-            tween(WinStroke, fadeT, {Transparency = 0},              Enum.EasingStyle.Sine)
-            tween(rdot,      fadeT, {BackgroundTransparency = 0},    Enum.EasingStyle.Sine)
-            tween(title1,    fadeT, {TextTransparency = 0},          Enum.EasingStyle.Sine)
-            tween(title2,    fadeT, {TextTransparency = 0},          Enum.EasingStyle.Sine)
-            tween(MinB,      fadeT, {TextTransparency = 0},          Enum.EasingStyle.Sine)
-            tween(ClsB,      fadeT, {TextTransparency = 0},          Enum.EasingStyle.Sine)
-            for _, circle in ipairs(circles) do
-                tween(circle, fadeT, {BackgroundTransparency = 0.3}, Enum.EasingStyle.Sine)
-            end
-            task.delay(0.15, function() animateBodyElements(true) end)
+            fadeAll(false, 0.35)
         end
     end
 
@@ -759,7 +713,6 @@ end)
 -- ══════════════════════════════════════════
 --   OPEN ANIMATION  (fade in)
 -- ══════════════════════════════════════════
-Win.Visible                = false
 Win.BackgroundTransparency = 1
 WinStroke.Transparency     = 1
 rdot.BackgroundTransparency  = 1
@@ -767,29 +720,14 @@ title1.TextTransparency    = 1
 title2.TextTransparency    = 1
 MinB.TextTransparency      = 1
 ClsB.TextTransparency      = 1
-for _, circle in ipairs(circles) do
-    circle.BackgroundTransparency = 1
-end
+for _, c in ipairs(circles) do c.BackgroundTransparency = 1 end
 animateBodyElements(false)
 
--- One frame delay so Roblox registers the invisible state before tweening
-task.defer(function()
-    Win.Visible = true
-    local fadeT = 0.5
+-- Small delay so the executor registers the invisible state before tweening
+task.wait(0.05)
 
-    tween(Win,       fadeT, {BackgroundTransparency = 0}, Enum.EasingStyle.Sine)
-    tween(WinStroke, fadeT, {Transparency = 0},           Enum.EasingStyle.Sine)
-    tween(rdot,      fadeT, {BackgroundTransparency = 0}, Enum.EasingStyle.Sine)
-    tween(title1,    fadeT, {TextTransparency = 0},       Enum.EasingStyle.Sine)
-    tween(title2,    fadeT, {TextTransparency = 0},       Enum.EasingStyle.Sine)
-    tween(MinB,      fadeT, {TextTransparency = 0},       Enum.EasingStyle.Sine)
-    tween(ClsB,      fadeT, {TextTransparency = 0},       Enum.EasingStyle.Sine)
-    for _, circle in ipairs(circles) do
-        tween(circle, fadeT, {BackgroundTransparency = 0.3}, Enum.EasingStyle.Sine)
-    end
-
-    task.delay(0.25, function()
-        animateBodyElements(true)
-        task.delay(0.1, tryLoadSaved)
-    end)
+fadeAll(false, 0.5)
+task.delay(0.3, function()
+    animateBodyElements(true)
+    task.delay(0.1, tryLoadSaved)
 end)
