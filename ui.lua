@@ -1,8 +1,8 @@
--- PANEL DE VERIFICACIÓN — UI
--- Archivo: ui.lua
+-- VERIFICATION PANEL — UI
+-- File: ui.lua
 
 -- ══════════════════════════════════════════
---   CARGAR CONFIG DESDE GITHUB
+--   LOAD CONFIG FROM GITHUB
 -- ══════════════════════════════════════════
 local CONFIG_URL = "https://raw.githubusercontent.com/denzells/verified/main/config.lua"
 
@@ -12,17 +12,17 @@ local configOk, configErr = pcall(function()
 end)
 
 if not configOk or not Config then
-    warn("[serios.gg] No se pudo cargar config.lua: " .. tostring(configErr))
+    warn("[serios.gg] Failed to load config.lua: " .. tostring(configErr))
     return
 end
 
 if not Config.httpReady then
-    warn("[serios.gg] HTTP no disponible en este executor.")
+    warn("[serios.gg] HTTP not available in this executor.")
     return
 end
 
 -- ══════════════════════════════════════════
---   SERVICIOS
+--   SERVICES
 -- ══════════════════════════════════════════
 local Players      = game:GetService("Players")
 local UIS          = game:GetService("UserInputService")
@@ -31,24 +31,30 @@ local RunService   = game:GetService("RunService")
 local LocalPlayer  = Players.LocalPlayer
 
 -- ══════════════════════════════════════════
---   COLORES
+--   ICON IDs
+-- ══════════════════════════════════════════
+local ICON_USERNAME = "rbxassetid://136128745074843"
+local ICON_KEY      = "rbxassetid://126448589402910"
+
+-- ══════════════════════════════════════════
+--   COLORS
 -- ══════════════════════════════════════════
 local C = {
-    WIN    = Color3.fromRGB(12, 12, 12),
-    TBAR   = Color3.fromRGB(8, 8, 8),
-    LINE   = Color3.fromRGB(42, 42, 42),
-    RED    = Color3.fromRGB(205, 30, 30),
-    WHITE  = Color3.fromRGB(235, 235, 235),
-    GRAY   = Color3.fromRGB(110, 110, 110),
-    MUTED  = Color3.fromRGB(55, 55, 55),
-    INPUT  = Color3.fromRGB(18, 18, 18),
-    GREEN  = Color3.fromRGB(50, 200, 80),
-    YELLOW = Color3.fromRGB(255, 200, 50),
-    SAVED  = Color3.fromRGB(50, 150, 255), -- azul para indicar datos guardados
+    WIN   = Color3.fromRGB(12, 12, 12),
+    TBAR  = Color3.fromRGB(8, 8, 8),
+    LINE  = Color3.fromRGB(42, 42, 42),
+    RED   = Color3.fromRGB(205, 30, 30),
+    WHITE = Color3.fromRGB(235, 235, 235),
+    GRAY  = Color3.fromRGB(110, 110, 110),
+    MUTED = Color3.fromRGB(55, 55, 55),
+    INPUT = Color3.fromRGB(18, 18, 18),
+    GREEN = Color3.fromRGB(50, 200, 80),
+    YELLOW= Color3.fromRGB(255, 200, 50),
+    SAVED = Color3.fromRGB(50, 150, 255),
 }
 
 -- ══════════════════════════════════════════
---   UTILIDADES
+--   UTILITIES
 -- ══════════════════════════════════════════
 local function mk(cls, props, parent)
     local obj = Instance.new(cls)
@@ -60,24 +66,21 @@ local function mk(cls, props, parent)
 end
 
 local function rnd(radius, parent)
-    local corner = Instance.new("UICorner")
-    corner.CornerRadius = UDim.new(0, radius)
-    corner.Parent = parent
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, radius)
+    c.Parent = parent
 end
 
 local function tween(obj, time, props, easing, direction)
-    local info = TweenInfo.new(
-        time,
-        easing    or Enum.EasingStyle.Quart,
-        direction or Enum.EasingDirection.Out
-    )
-    local t = TweenService:Create(obj, info, props)
+    local t = TweenService:Create(obj,
+        TweenInfo.new(time, easing or Enum.EasingStyle.Quart, direction or Enum.EasingDirection.Out),
+        props)
     t:Play()
     return t
 end
 
 -- ══════════════════════════════════════════
---   CREAR GUI BASE
+--   GUI BASE
 -- ══════════════════════════════════════════
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui", 10)
     or LocalPlayer:FindFirstChildOfClass("PlayerGui")
@@ -87,16 +90,16 @@ local old = PlayerGui:FindFirstChild("PanelBase")
 if old then old:Destroy() end
 
 local SG = Instance.new("ScreenGui")
-SG.Name             = "PanelBase"
-SG.ResetOnSpawn     = false
-SG.IgnoreGuiInset   = true
-SG.ZIndexBehavior   = Enum.ZIndexBehavior.Sibling
-SG.Parent           = PlayerGui
+SG.Name           = "PanelBase"
+SG.ResetOnSpawn   = false
+SG.IgnoreGuiInset = true
+SG.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+SG.Parent         = PlayerGui
 
 -- ══════════════════════════════════════════
---   VENTANA PRINCIPAL
+--   MAIN WINDOW
 -- ══════════════════════════════════════════
-local WW, WH = 320, 280   -- un poco más alto para el indicador de guardado
+local WW, WH = 320, 280
 local TH = 42
 
 local Win = mk("Frame", {
@@ -130,6 +133,7 @@ local TBar = mk("Frame", {
 }, Win)
 rnd(14, TBar)
 
+-- Bottom filler so titlebar corners don't show at the bottom
 mk("Frame", {
     Size                   = UDim2.new(1, 0, 0, 14),
     Position               = UDim2.new(0, 0, 1, -14),
@@ -140,6 +144,7 @@ mk("Frame", {
     Active                 = false,
 }, TBar)
 
+-- Red dot
 local rdot = mk("Frame", {
     Size             = UDim2.new(0, 10, 0, 10),
     Position         = UDim2.new(0, 14, 0.5, -5),
@@ -174,7 +179,7 @@ local title2 = mk("TextLabel", {
 }, TBar)
 
 -- ══════════════════════════════════════════
---   BOTONES MINIMIZE / CLOSE
+--   MINIMIZE / CLOSE BUTTONS
 -- ══════════════════════════════════════════
 local MinB = mk("TextButton", {
     Text                   = "─",
@@ -219,9 +224,9 @@ local Body = mk("Frame", {
 }, Win)
 
 -- ══════════════════════════════════════════
---   INPUTS
+--   INPUT CREATOR  (with icon inside)
 -- ══════════════════════════════════════════
-local function CreateInput(parent, labelText, yPos, isPassword)
+local function CreateInput(parent, labelText, yPos, isPassword, iconId)
     local container = mk("Frame", {
         Size                   = UDim2.new(1, 0, 0, 56),
         Position               = UDim2.new(0, 0, 0, yPos),
@@ -252,6 +257,32 @@ local function CreateInput(parent, labelText, yPos, isPassword)
     rnd(6, inputBg)
     mk("UIStroke", {Color = C.LINE, Thickness = 1, Transparency = 0.6}, inputBg)
 
+    -- Icon inside the input (left side)
+    local iconSize = 18
+    local iconPad  = 8
+
+    local icon = mk("ImageLabel", {
+        Image                  = iconId,
+        Size                   = UDim2.new(0, iconSize, 0, iconSize),
+        Position               = UDim2.new(0, iconPad, 0.5, -iconSize/2),
+        BackgroundTransparency = 1,
+        ImageColor3            = C.MUTED,
+        ZIndex                 = 8
+    }, inputBg)
+
+    -- Separator line after icon
+    mk("Frame", {
+        Size                   = UDim2.new(0, 1, 0, 16),
+        Position               = UDim2.new(0, iconPad + iconSize + 6, 0.5, -8),
+        BackgroundColor3       = C.LINE,
+        BackgroundTransparency = 0.3,
+        BorderSizePixel        = 0,
+        ZIndex                 = 8
+    }, inputBg)
+
+    -- Text offset to make room for icon + separator
+    local textOffsetLeft = iconPad + iconSize + 14
+
     local input = mk("TextBox", {
         Text                   = "",
         Font                   = Enum.Font.Gotham,
@@ -260,8 +291,8 @@ local function CreateInput(parent, labelText, yPos, isPassword)
         PlaceholderText        = labelText,
         PlaceholderColor3      = C.MUTED,
         BackgroundTransparency = 1,
-        Size                   = UDim2.new(1, -16, 1, 0),
-        Position               = UDim2.new(0, 8, 0, 0),
+        Size                   = UDim2.new(1, -(textOffsetLeft + 8), 1, 0),
+        Position               = UDim2.new(0, textOffsetLeft, 0, 0),
         TextXAlignment         = Enum.TextXAlignment.Left,
         ClearTextOnFocus       = false,
         ZIndex                 = 7
@@ -281,14 +312,17 @@ local function CreateInput(parent, labelText, yPos, isPassword)
         end)
     end
 
+    -- Focus / unfocus highlight
     input.Focused:Connect(function()
         tween(inputBg, 0.15, {BackgroundColor3 = Color3.fromRGB(22,22,22), BackgroundTransparency = 0.1})
+        tween(icon, 0.15, {ImageColor3 = C.WHITE})
         local stroke = inputBg:FindFirstChildOfClass("UIStroke")
         if stroke then tween(stroke, 0.15, {Color = C.RED, Transparency = 0.4}) end
     end)
 
     input.FocusLost:Connect(function()
         tween(inputBg, 0.15, {BackgroundColor3 = C.INPUT, BackgroundTransparency = 0.2})
+        tween(icon, 0.15, {ImageColor3 = C.MUTED})
         local stroke = inputBg:FindFirstChildOfClass("UIStroke")
         if stroke then tween(stroke, 0.15, {Color = C.LINE, Transparency = 0.6}) end
     end)
@@ -297,7 +331,6 @@ local function CreateInput(parent, labelText, yPos, isPassword)
         return isPassword and realText or input.Text
     end
 
-    -- Función para rellenar desde fuera (auto-fill)
     local function fill(text)
         if isPassword then
             realText   = text
@@ -307,18 +340,20 @@ local function CreateInput(parent, labelText, yPos, isPassword)
         end
     end
 
-    return input, container, getRealText, inputBg, fill
+    return input, container, getRealText, inputBg, fill, icon
 end
 
-local usernameInput, userContainer, getUsernameText, userBg, fillUsername = CreateInput(Body, "Username", 0,  false)
-local keyInput,      keyContainer,  getKeyText,      keyBg,  fillKey      = CreateInput(Body, "Key",      66, true)
+local usernameInput, userContainer, getUsernameText, userBg, fillUsername, userIcon =
+    CreateInput(Body, "Username", 0,  false, ICON_USERNAME)
+
+local keyInput, keyContainer, getKeyText, keyBg, fillKey, keyIcon =
+    CreateInput(Body, "Key",      66, true,  ICON_KEY)
 
 -- ══════════════════════════════════════════
---   INDICADOR "DATOS GUARDADOS"
+--   SAVED DATA BADGE
 -- ══════════════════════════════════════════
--- Pequeño badge que aparece si se cargaron datos guardados
 local savedBadge = mk("Frame", {
-    Size                   = UDim2.new(0, 110, 0, 20),
+    Size                   = UDim2.new(0, 120, 0, 20),
     Position               = UDim2.new(0, 0, 0, 130),
     BackgroundColor3       = Color3.fromRGB(20, 20, 20),
     BackgroundTransparency = 0.3,
@@ -330,18 +365,17 @@ rnd(5, savedBadge)
 mk("UIStroke", {Color = C.SAVED, Thickness = 1, Transparency = 0.5}, savedBadge)
 
 mk("TextLabel", {
-    Text                   = "●  Saved Data",
+    Text                   = "● Credentials saved",
     Font                   = Enum.Font.GothamSemibold,
     TextSize               = 9,
     TextColor3             = C.SAVED,
     BackgroundTransparency = 1,
-    Size                   = UDim2.new(1, -8, 1, 0),
+    Size                   = UDim2.new(1, -24, 1, 0),
     Position               = UDim2.new(0, 8, 0, 0),
     TextXAlignment         = Enum.TextXAlignment.Left,
     ZIndex                 = 7
 }, savedBadge)
 
--- Botón pequeño para borrar datos guardados (×)
 local clearBtn = mk("TextButton", {
     Text                   = "×",
     Font                   = Enum.Font.GothamBold,
@@ -355,8 +389,11 @@ local clearBtn = mk("TextButton", {
     AutoButtonColor        = false,
 }, savedBadge)
 
+clearBtn.MouseEnter:Connect(function() tween(clearBtn, 0.1, {TextColor3 = C.RED}) end)
+clearBtn.MouseLeave:Connect(function() tween(clearBtn, 0.1, {TextColor3 = C.GRAY}) end)
+
 -- ══════════════════════════════════════════
---   BOTÓN VERIFY
+--   VERIFY BUTTON
 -- ══════════════════════════════════════════
 local verifyBtn = mk("TextButton", {
     Text                   = "Verify",
@@ -415,7 +452,7 @@ local function animateCircles(color)
 end
 
 -- ══════════════════════════════════════════
---   AUTO-FILL CON CREDENCIALES GUARDADAS
+--   AUTO-FILL SAVED CREDENTIALS
 -- ══════════════════════════════════════════
 local hasSavedData = false
 
@@ -424,47 +461,44 @@ local function tryLoadSaved()
     if savedUser and savedKey and savedUser ~= "" and savedKey ~= "" then
         fillUsername(savedUser)
         fillKey(savedKey)
-        hasSavedData    = true
+        hasSavedData       = true
         savedBadge.Visible = true
 
-        -- Resaltar los inputs en azul para indicar que están auto-rellenados
-        local userStroke = userBg:FindFirstChildOfClass("UIStroke")
-        local keyStroke  = keyBg:FindFirstChildOfClass("UIStroke")
-        if userStroke then tween(userStroke, 0.4, {Color = C.SAVED, Transparency = 0.3}) end
-        if keyStroke  then tween(keyStroke,  0.4, {Color = C.SAVED, Transparency = 0.3}) end
+        -- Blue highlight on inputs to signal auto-fill
+        local uStroke = userBg:FindFirstChildOfClass("UIStroke")
+        local kStroke = keyBg:FindFirstChildOfClass("UIStroke")
+        if uStroke then tween(uStroke, 0.4, {Color = C.SAVED, Transparency = 0.3}) end
+        if kStroke then tween(kStroke, 0.4, {Color = C.SAVED, Transparency = 0.3}) end
+        tween(userIcon, 0.4, {ImageColor3 = C.SAVED})
+        tween(keyIcon,  0.4, {ImageColor3 = C.SAVED})
 
-        -- Volver al color normal tras 2s
         task.delay(2, function()
-            if userStroke then tween(userStroke, 0.4, {Color = C.LINE, Transparency = 0.6}) end
-            if keyStroke  then tween(keyStroke,  0.4, {Color = C.LINE, Transparency = 0.6}) end
+            if uStroke then tween(uStroke, 0.4, {Color = C.LINE, Transparency = 0.6}) end
+            if kStroke then tween(kStroke, 0.4, {Color = C.LINE, Transparency = 0.6}) end
+            tween(userIcon, 0.4, {ImageColor3 = C.MUTED})
+            tween(keyIcon,  0.4, {ImageColor3 = C.MUTED})
         end)
     end
 end
 
--- Botón para limpiar datos guardados
+-- Clear saved credentials button
 clearBtn.MouseButton1Click:Connect(function()
     Config.clearCredentials()
-    hasSavedData = false
-
-    -- Limpiar campos
+    hasSavedData       = false
     usernameInput.Text = ""
     keyInput.Text      = ""
-
-    -- Ocultar badge
     tween(savedBadge, 0.2, {BackgroundTransparency = 1})
     task.delay(0.2, function() savedBadge.Visible = false end)
 end)
 
-clearBtn.MouseEnter:Connect(function() tween(clearBtn, 0.1, {TextColor3 = C.RED}) end)
-clearBtn.MouseLeave:Connect(function() tween(clearBtn, 0.1, {TextColor3 = C.GRAY}) end)
-
 -- ══════════════════════════════════════════
---   LÓGICA DEL BOTÓN VERIFY
+--   VERIFY LOGIC
 -- ══════════════════════════════════════════
 verifyBtn.MouseButton1Click:Connect(function()
     local username = getUsernameText()
     local key      = getKeyText()
 
+    -- Click animation
     tween(verifyBtn, 0.08, {Size = UDim2.new(0.5, -9, 0, 30)})
     task.delay(0.08, function()
         tween(verifyBtn, 0.12, {Size = UDim2.new(0.5, -5, 0, 34)})
@@ -481,13 +515,12 @@ verifyBtn.MouseButton1Click:Connect(function()
             animateCircles(C.RED)
         elseif success then
             animateCircles(C.GREEN)
-            -- Las credenciales ya se guardan dentro de config.verify()
             task.delay(2, function()
                 SG:Destroy()
                 Config.loadMain()
             end)
         else
-            -- Key inválida: borrar datos guardados para no rellenar basura la próxima vez
+            -- Clear saved data if key was invalid
             if hasSavedData then
                 Config.clearCredentials()
                 hasSavedData       = false
@@ -499,7 +532,7 @@ verifyBtn.MouseButton1Click:Connect(function()
 end)
 
 -- ══════════════════════════════════════════
---   SISTEMA DE DRAG
+--   DRAG SYSTEM
 -- ══════════════════════════════════════════
 do
     local dragging = false
@@ -546,7 +579,7 @@ do
 end
 
 -- ══════════════════════════════════════════
---   ANIMACIÓN DE BODY (show/hide)
+--   BODY ANIMATION (show / hide)
 -- ══════════════════════════════════════════
 local function animateBodyElements(show)
     local targetT = show and 0 or 1
@@ -564,9 +597,7 @@ local function animateBodyElements(show)
             if child:IsA("Frame") then
                 tween(child, 0.2, {BackgroundTransparency = show and 0.2 or 1})
                 local stroke = child:FindFirstChildOfClass("UIStroke")
-                if stroke then
-                    tween(stroke, 0.2, {Transparency = show and 0.6 or 1})
-                end
+                if stroke then tween(stroke, 0.2, {Transparency = show and 0.6 or 1}) end
                 local textbox = child:FindFirstChildOfClass("TextBox")
                 if textbox then
                     tween(textbox, 0.2, {
@@ -574,6 +605,8 @@ local function animateBodyElements(show)
                         PlaceholderColor3 = show and C.MUTED or Color3.fromRGB(0,0,0)
                     })
                 end
+                local img = child:FindFirstChildOfClass("ImageLabel")
+                if img then tween(img, 0.2, {ImageTransparency = targetT}) end
             end
         end
     end
@@ -583,26 +616,20 @@ local function animateBodyElements(show)
     animInputBg(userContainer)
     animInputBg(keyContainer)
 
-    -- Badge de guardado
     if hasSavedData and savedBadge.Visible then
         tween(savedBadge, 0.2, {BackgroundTransparency = show and 0.3 or 1})
-        local badgeLabel = savedBadge:FindFirstChildOfClass("TextLabel")
-        if badgeLabel then tween(badgeLabel, 0.2, {TextTransparency = targetT}) end
+        local bl = savedBadge:FindFirstChildOfClass("TextLabel")
+        if bl then tween(bl, 0.2, {TextTransparency = targetT}) end
         tween(clearBtn, 0.2, {TextTransparency = targetT})
     end
 
     tween(verifyBtn, 0.2, {
         BackgroundTransparency = show and 0.1 or 1,
         TextTransparency       = targetT,
-        Size = show
-            and UDim2.new(0.5, -5, 0, 34)
-            or  UDim2.new(0.5, -5, 0, 0)
+        Size = show and UDim2.new(0.5, -5, 0, 34) or UDim2.new(0.5, -5, 0, 0)
     })
-
     local btnStroke = verifyBtn:FindFirstChildOfClass("UIStroke")
-    if btnStroke then
-        tween(btnStroke, 0.2, {Transparency = show and 0.4 or 1})
-    end
+    if btnStroke then tween(btnStroke, 0.2, {Transparency = show and 0.4 or 1}) end
 end
 
 -- ══════════════════════════════════════════
@@ -618,14 +645,14 @@ MinB.MouseButton1Click:Connect(function()
 
     if minimized then
         animateBodyElements(false)
-        tween(Body,      0.3,  {Size = UDim2.new(1, -40, 0, 0)},                                        Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(Win,       0.3,  {Size = UDim2.new(0, WW, 0, TH), BackgroundTransparency = 0.15},         Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tween(Body,      0.3,  {Size = UDim2.new(1, -40, 0, 0)},                                Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tween(Win,       0.3,  {Size = UDim2.new(0, WW, 0, TH), BackgroundTransparency = 0.15}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
         tween(WinStroke, 0.25, {Transparency = 0.5})
         tween(title1,    0.2,  {TextTransparency = 0.5})
         task.delay(0.35, function() animating = false end)
     else
-        tween(Win,       0.35, {Size = UDim2.new(0, WW, 0, WH), BackgroundTransparency = 0.15},         Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(Body,      0.35, {Size = UDim2.new(1, -40, 1, -TH-60)},                                   Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tween(Win,       0.35, {Size = UDim2.new(0, WW, 0, WH), BackgroundTransparency = 0.15}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tween(Body,      0.35, {Size = UDim2.new(1, -40, 1, -TH-60)},                          Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
         tween(WinStroke, 0.3,  {Transparency = 0.4})
         tween(title1,    0.25, {TextTransparency = 0})
         task.delay(0.15, function() animateBodyElements(true) end)
@@ -637,21 +664,19 @@ end)
 
 local function doClose()
     if animating then return end
-    animating   = true
-    Win.Active  = false
+    animating  = true
+    Win.Active = false
 
     animateBodyElements(false)
-    tween(Body,   0.3,  {Size = UDim2.new(0,0,0,0), Position = UDim2.new(0.5,0,0,TH)}, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
-    tween(rdot,   0.2,  {BackgroundTransparency = 1})
-    tween(title1, 0.2,  {TextTransparency = 1})
-    tween(title2, 0.2,  {TextTransparency = 1})
-    tween(MinB,   0.2,  {TextTransparency = 1})
-    tween(ClsB,   0.2,  {TextTransparency = 1})
-
+    tween(Body,   0.3, {Size = UDim2.new(0,0,0,0), Position = UDim2.new(0.5,0,0,TH)}, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
+    tween(rdot,   0.2, {BackgroundTransparency = 1})
+    tween(title1, 0.2, {TextTransparency = 1})
+    tween(title2, 0.2, {TextTransparency = 1})
+    tween(MinB,   0.2, {TextTransparency = 1})
+    tween(ClsB,   0.2, {TextTransparency = 1})
     for _, circle in ipairs(circles) do
         tween(circle, 0.2, {BackgroundTransparency = 1})
     end
-
     task.delay(0.4, function()
         tween(Win,       0.35, {Size = UDim2.new(0,0,0,0), BackgroundTransparency = 1}, Enum.EasingStyle.Quint, Enum.EasingDirection.In)
         tween(WinStroke, 0.3,  {Transparency = 1})
@@ -662,7 +687,7 @@ end
 ClsB.MouseButton1Click:Connect(doClose)
 
 -- ══════════════════════════════════════════
---   HOTKEYS
+--   HOTKEYS  (RightShift = hide | End = close)
 -- ══════════════════════════════════════════
 local hidden = false
 UIS.InputBegan:Connect(function(i, gp)
@@ -697,7 +722,7 @@ UIS.InputBegan:Connect(function(i, gp)
 end)
 
 -- ══════════════════════════════════════════
---   ANIMACIÓN DE APERTURA
+--   OPEN ANIMATION
 -- ══════════════════════════════════════════
 Win.Size                   = UDim2.new(0, WW/3, 0, TH)
 Win.BackgroundTransparency = 1
@@ -719,7 +744,7 @@ tween(Win,       0.4,  {Size = UDim2.new(0, WW, 0, TH), BackgroundTransparency =
 tween(WinStroke, 0.35, {Transparency = 0.4})
 
 task.delay(0.1, function()
-    tween(rdot,   0.3, {BackgroundTransparency = 0},   Enum.EasingStyle.Sine)
+    tween(rdot,   0.3, {BackgroundTransparency = 0},  Enum.EasingStyle.Sine)
     task.delay(0.05, function() tween(title1, 0.3, {TextTransparency = 0}, Enum.EasingStyle.Sine) end)
     task.delay(0.08, function() tween(title2, 0.3, {TextTransparency = 0}, Enum.EasingStyle.Sine) end)
     task.delay(0.11, function()
@@ -737,10 +762,9 @@ end)
 
 task.delay(0.25, function()
     tween(Win,  0.45, {Size = UDim2.new(0, WW, 0, WH), BackgroundTransparency = 0.15}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-    tween(Body, 0.45, {Size = UDim2.new(1, -40, 1, -TH-60)},                           Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+    tween(Body, 0.45, {Size = UDim2.new(1, -40, 1, -TH-60)},                          Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
     task.delay(0.3, function()
         animateBodyElements(true)
-        -- Intentar cargar credenciales guardadas una vez que el panel es visible
         task.delay(0.2, tryLoadSaved)
     end)
 end)
