@@ -106,7 +106,7 @@ local Win = mk("Frame", {
     Size                   = UDim2.new(0, WW, 0, WH),
     Position               = UDim2.new(0.5, -WW/2, 0.5, -WH/2),
     BackgroundColor3       = C.WIN,
-    BackgroundTransparency = 0.15,
+    BackgroundTransparency = 0,
     BorderSizePixel        = 0,
     ClipsDescendants       = false,
     ZIndex                 = 3,
@@ -116,7 +116,7 @@ rnd(14, Win)
 local WinStroke = mk("UIStroke", {
     Color        = C.LINE,
     Thickness    = 1,
-    Transparency = 0.4
+    Transparency = 0
 }, Win)
 
 -- ══════════════════════════════════════════
@@ -125,7 +125,7 @@ local WinStroke = mk("UIStroke", {
 local TBar = mk("Frame", {
     Size                   = UDim2.new(1, 0, 0, TH),
     BackgroundColor3       = C.TBAR,
-    BackgroundTransparency = 0.1,
+    BackgroundTransparency = 0,
     BorderSizePixel        = 0,
     ZIndex                 = 6,
     ClipsDescendants       = false,
@@ -138,7 +138,7 @@ mk("Frame", {
     Size                   = UDim2.new(1, 0, 0, 14),
     Position               = UDim2.new(0, 0, 1, -14),
     BackgroundColor3       = C.TBAR,
-    BackgroundTransparency = 0.1,
+    BackgroundTransparency = 0,
     BorderSizePixel        = 0,
     ZIndex                 = 5,
     Active                 = false,
@@ -665,16 +665,16 @@ MinB.MouseButton1Click:Connect(function()
 
     if minimized then
         animateBodyElements(false)
-        tween(Body,      0.3,  {Size = UDim2.new(1, -40, 0, 0)},                                Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(Win,       0.3,  {Size = UDim2.new(0, WW, 0, TH), BackgroundTransparency = 0.15}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(WinStroke, 0.25, {Transparency = 0.5})
+        tween(Body,      0.3,  {Size = UDim2.new(1, -40, 0, 0)},           Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tween(Win,       0.3,  {Size = UDim2.new(0, WW, 0, TH)},           Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
         tween(title1,    0.2,  {TextTransparency = 0.5})
+        tween(title2,    0.2,  {TextTransparency = 0.5})
         task.delay(0.35, function() animating = false end)
     else
-        tween(Win,       0.35, {Size = UDim2.new(0, WW, 0, WH), BackgroundTransparency = 0.15}, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(Body,      0.35, {Size = UDim2.new(1, -40, 1, -TH-60)},                          Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
-        tween(WinStroke, 0.3,  {Transparency = 0.4})
+        tween(Win,       0.35, {Size = UDim2.new(0, WW, 0, WH)},           Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+        tween(Body,      0.35, {Size = UDim2.new(1, -40, 1, -TH-60)},      Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
         tween(title1,    0.25, {TextTransparency = 0})
+        tween(title2,    0.25, {TextTransparency = 0})
         task.delay(0.15, function() animateBodyElements(true) end)
         task.delay(0.5,  function() animating = false end)
     end
@@ -731,8 +731,8 @@ UIS.InputBegan:Connect(function(i, gp)
         else
             Win.Visible = true
             local fadeT = 0.35
-            tween(Win,       fadeT, {BackgroundTransparency = 0.15}, Enum.EasingStyle.Sine)
-            tween(WinStroke, fadeT, {Transparency = 0.4},            Enum.EasingStyle.Sine)
+            tween(Win,       fadeT, {BackgroundTransparency = 0},    Enum.EasingStyle.Sine)
+            tween(WinStroke, fadeT, {Transparency = 0},              Enum.EasingStyle.Sine)
             tween(rdot,      fadeT, {BackgroundTransparency = 0},    Enum.EasingStyle.Sine)
             tween(title1,    fadeT, {TextTransparency = 0},          Enum.EasingStyle.Sine)
             tween(title2,    fadeT, {TextTransparency = 0},          Enum.EasingStyle.Sine)
@@ -751,10 +751,9 @@ UIS.InputBegan:Connect(function(i, gp)
 end)
 
 -- ══════════════════════════════════════════
---   OPEN ANIMATION  (simple fade in)
+--   OPEN ANIMATION  (fade in)
 -- ══════════════════════════════════════════
-SG.Parent = nil   -- detach while we set initial state
-
+Win.Visible                = false
 Win.BackgroundTransparency = 1
 WinStroke.Transparency     = 1
 rdot.BackgroundTransparency  = 1
@@ -767,19 +766,24 @@ for _, circle in ipairs(circles) do
 end
 animateBodyElements(false)
 
-SG.Parent = PlayerGui   -- reattach, then fade everything in
+-- One frame delay so Roblox registers the invisible state before tweening
+task.defer(function()
+    Win.Visible = true
+    local fadeT = 0.5
 
-tween(Win,       0.45, {BackgroundTransparency = 0.15}, Enum.EasingStyle.Sine)
-tween(WinStroke, 0.45, {Transparency = 0.4},            Enum.EasingStyle.Sine)
-tween(rdot,      0.45, {BackgroundTransparency = 0},    Enum.EasingStyle.Sine)
-tween(title1,    0.45, {TextTransparency = 0},          Enum.EasingStyle.Sine)
-tween(title2,    0.45, {TextTransparency = 0},          Enum.EasingStyle.Sine)
-tween(MinB,      0.45, {TextTransparency = 0},          Enum.EasingStyle.Sine)
-tween(ClsB,      0.45, {TextTransparency = 0},          Enum.EasingStyle.Sine)
-for _, circle in ipairs(circles) do
-    tween(circle, 0.45, {BackgroundTransparency = 0.3}, Enum.EasingStyle.Sine)
-end
-task.delay(0.2, function()
-    animateBodyElements(true)
-    task.delay(0.1, tryLoadSaved)
+    tween(Win,       fadeT, {BackgroundTransparency = 0}, Enum.EasingStyle.Sine)
+    tween(WinStroke, fadeT, {Transparency = 0},           Enum.EasingStyle.Sine)
+    tween(rdot,      fadeT, {BackgroundTransparency = 0}, Enum.EasingStyle.Sine)
+    tween(title1,    fadeT, {TextTransparency = 0},       Enum.EasingStyle.Sine)
+    tween(title2,    fadeT, {TextTransparency = 0},       Enum.EasingStyle.Sine)
+    tween(MinB,      fadeT, {TextTransparency = 0},       Enum.EasingStyle.Sine)
+    tween(ClsB,      fadeT, {TextTransparency = 0},       Enum.EasingStyle.Sine)
+    for _, circle in ipairs(circles) do
+        tween(circle, fadeT, {BackgroundTransparency = 0.3}, Enum.EasingStyle.Sine)
+    end
+
+    task.delay(0.25, function()
+        animateBodyElements(true)
+        task.delay(0.1, tryLoadSaved)
+    end)
 end)
