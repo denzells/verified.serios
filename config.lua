@@ -9,7 +9,7 @@ local KeyAuthConfig = {
     Version = "1.0"
 }
 local KeyAuthURL = "https://keyauth.win/api/1.2/"
-local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/denzells/panel/main/main.lua"
+local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/denzells/panel/main"
 
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or (fluxus and fluxus.request) or request
 
