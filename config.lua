@@ -1,6 +1,5 @@
--- config.lua - ACTUALIZACIÓN OPCIONAL
--- Solo añadir estas modificaciones si quieres mostrar fecha de expiración
--- Si no, el panel mostrará "N/A" en expiry
+-- config.lua
+local _loadstring = loadstring  -- captura loadstring del executor ANTES de cualquier pcall
 
 local HttpService = game:GetService("HttpService")
 
@@ -17,7 +16,6 @@ local httpRequest = (syn and syn.request) or (http and http.request) or http_req
 local SAVE_FILE = "serios_saved.json"
 local canSave = typeof(writefile) == "function" and typeof(readfile) == "function" and typeof(isfile) == "function"
 
--- FUNCIÓN ACTUALIZADA: Ahora recibe expiry
 local function saveCredentials(username, key, expiry)
     if not canSave then return end
     pcall(function()
@@ -48,7 +46,6 @@ local function clearCredentials()
     end)
 end
 
--- FUNCIÓN ACTUALIZADA: Extrae y guarda expiry
 local function verifyWithKeyAuth(username, key, callback)
     if username == "" or key == "" then
         callback(false, "empty")
@@ -97,7 +94,6 @@ local function verifyWithKeyAuth(username, key, callback)
         return
     end
 
-    -- NUEVO: Extraer expiry de KeyAuth
     if loginData.success then
         local expiry = "N/A"
         if loginData.info and loginData.info.subscriptions and loginData.info.subscriptions[1] then
@@ -109,8 +105,24 @@ local function verifyWithKeyAuth(username, key, callback)
     callback(loginData.success, loginData.message or (loginData.success and "Verified" or "invalid"))
 end
 
+-- CORREGIDO: loadstring capturado fuera de pcall
 local function loadMainScript()
-    pcall(function() loadstring(game:HttpGet(MAIN_SCRIPT_URL))() end)
+    local ok, content = pcall(function()
+        return game:HttpGet(MAIN_SCRIPT_URL)
+    end)
+    if not ok or not content or content == "" then
+        warn("[serios.gg] Failed to download main script")
+        return
+    end
+    local fn, err = _loadstring(content)
+    if not fn then
+        warn("[serios.gg] Failed to compile main script: " .. tostring(err))
+        return
+    end
+    local runOk, runErr = pcall(fn)
+    if not runOk then
+        warn("[serios.gg] Failed to execute main script: " .. tostring(runErr))
+    end
 end
 
 return {
