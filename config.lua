@@ -4,12 +4,11 @@
 
 local _loadstring = loadstring
 
-local HttpService  = game:GetService("HttpService")
+local HttpService = game:GetService("HttpService")
 
 -- ─── CONFIGURACIÓN ────────────────────────────────────────────────────────────
-local GITHUB_RAW   = "https://raw.githubusercontent.com/denzells/verified/main/keys.json"
-local GITHUB_API   = "https://api.github.com/repos/denzells/verified/contents/keys.json"
-local GITHUB_TOKEN = "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"   -- Token con permisos repo (solo lectura es suficiente para verificar)
+local GITHUB_API      = "https://api.github.com/repos/denzells/verified/contents/keys.json"
+local GITHUB_TOKEN    = "ghp_tuTokenAqui"   -- ← pon tu token aquí (NO lo subas al repo del bot)
 local MAIN_SCRIPT_URL = "https://raw.githubusercontent.com/denzells/panel/main/main.lua"
 -- ──────────────────────────────────────────────────────────────────────────────
 
@@ -22,8 +21,8 @@ local httpRequest = (syn and syn.request)
 -- ─── PERSISTENCIA LOCAL ───────────────────────────────────────────────────────
 local SAVE_FILE = "serios_saved.json"
 local canSave   = typeof(writefile) == "function"
-               and typeof(readfile) == "function"
-               and typeof(isfile)   == "function"
+               and typeof(readfile)  == "function"
+               and typeof(isfile)    == "function"
 
 local function jsonDecode(str)
     local ok, r = pcall(function() return HttpService:JSONDecode(str) end)
@@ -61,6 +60,40 @@ local function clearCredentials()
     end)
 end
 
+-- ─── BASE64 ───────────────────────────────────────────────────────────────────
+local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+
+local function b64decode(s)
+    s = s:gsub("%s", "")
+    local lookup = {}
+    for i = 1, #b64chars do lookup[b64chars:sub(i,i)] = i - 1 end
+    local bytes = {}
+    for i = 1, #s, 4 do
+        local c1,c2,c3,c4 = s:sub(i,i), s:sub(i+1,i+1), s:sub(i+2,i+2), s:sub(i+3,i+3)
+        local n = (lookup[c1] or 0)*262144 + (lookup[c2] or 0)*4096
+                + (lookup[c3] or 0)*64     + (lookup[c4] or 0)
+        bytes[#bytes+1] = string.char(math.floor(n/65536) % 256)
+        if c3 ~= "=" then bytes[#bytes+1] = string.char(math.floor(n/256) % 256) end
+        if c4 ~= "=" then bytes[#bytes+1] = string.char(n % 256) end
+    end
+    return table.concat(bytes)
+end
+
+local function b64encode(s)
+    local bytes = {}
+    for i = 1, #s, 3 do
+        local b1 = s:byte(i)   or 0
+        local b2 = s:byte(i+1) or 0
+        local b3 = s:byte(i+2) or 0
+        local n  = b1*65536 + b2*256 + b3
+        bytes[#bytes+1] = b64chars:sub(math.floor(n/262144)%64+1, math.floor(n/262144)%64+1)
+        bytes[#bytes+1] = b64chars:sub(math.floor(n/4096)%64+1,   math.floor(n/4096)%64+1)
+        bytes[#bytes+1] = (i+1 <= #s) and b64chars:sub(math.floor(n/64)%64+1, math.floor(n/64)%64+1) or "="
+        bytes[#bytes+1] = (i+2 <= #s) and b64chars:sub(n%64+1, n%64+1) or "="
+    end
+    return table.concat(bytes)
+end
+
 -- ─── OBTENER IP PÚBLICA ───────────────────────────────────────────────────────
 local function getPublicIP()
     local ok, res = pcall(function()
@@ -70,7 +103,6 @@ local function getPublicIP()
         local data = jsonDecode(res.Body)
         if data and data.ip then return data.ip end
     end
-    -- fallback
     local ok2, res2 = pcall(function()
         return httpRequest({ Url = "https://icanhazip.com", Method = "GET" })
     end)
@@ -82,11 +114,10 @@ end
 
 -- ─── DESCARGAR KEYS DESDE GITHUB ─────────────────────────────────────────────
 local function fetchKeysDB()
-    -- Usamos la API de GitHub para tener el SHA y poder actualizar
     local ok, res = pcall(function()
         return httpRequest({
-            Url     = GITHUB_API,
-            Method  = "GET",
+            Url    = GITHUB_API,
+            Method = "GET",
             Headers = {
                 ["Authorization"] = "token " .. GITHUB_TOKEN,
                 ["Accept"]        = "application/vnd.github.v3+json",
@@ -94,66 +125,27 @@ local function fetchKeysDB()
         })
     end)
     if not ok or not res or not res.Body then return nil, nil end
+
     local meta = jsonDecode(res.Body)
     if not meta or not meta.content then return nil, nil end
 
-    -- Decodificar base64
-    local b64content = meta.content:gsub("%s", "")  -- quitar saltos de línea del base64
-    local decoded
-    local decOk = pcall(function()
-        -- Roblox tiene base64 nativo en algunos ejecutores
-        if typeof(base64) == "table" and base64.decode then
-            decoded = base64.decode(b64content)
-        else
-            -- decodificación manual base64
-            local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-            local b64lookup = {}
-            for i = 1, #b64chars do b64lookup[b64chars:sub(i,i)] = i-1 end
-            local bytes = {}
-            for i = 1, #b64content, 4 do
-                local c1,c2,c3,c4 = b64content:sub(i,i), b64content:sub(i+1,i+1), b64content:sub(i+2,i+2), b64content:sub(i+3,i+3)
-                local n = (b64lookup[c1] or 0)*262144 + (b64lookup[c2] or 0)*4096 + (b64lookup[c3] or 0)*64 + (b64lookup[c4] or 0)
-                bytes[#bytes+1] = string.char(math.floor(n/65536) % 256)
-                if c3 ~= "=" then bytes[#bytes+1] = string.char(math.floor(n/256) % 256) end
-                if c4 ~= "=" then bytes[#bytes+1] = string.char(n % 256) end
-            end
-            decoded = table.concat(bytes)
-        end
-    end)
-    if not decOk or not decoded then return nil, nil end
-
-    local keysDB = jsonDecode(decoded)
+    local decoded = b64decode(meta.content)
+    local keysDB  = jsonDecode(decoded)
     return keysDB, meta.sha
 end
 
--- ─── SUBIR KEYS ACTUALIZADAS A GITHUB ────────────────────────────────────────
+-- ─── SUBIR KEYS A GITHUB ──────────────────────────────────────────────────────
 local function pushKeysDB(keysDB, sha)
-    local content = jsonEncode(keysDB)
-    -- Codificar en base64
-    local b64chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-    local encoded = {}
-    for i = 1, #content, 3 do
-        local b1 = content:byte(i) or 0
-        local b2 = content:byte(i+1) or 0
-        local b3 = content:byte(i+2) or 0
-        local n = b1*65536 + b2*256 + b3
-        encoded[#encoded+1] = b64chars:sub(math.floor(n/262144)%64+1, math.floor(n/262144)%64+1)
-        encoded[#encoded+1] = b64chars:sub(math.floor(n/4096)%64+1,   math.floor(n/4096)%64+1)
-        encoded[#encoded+1] = (i+1 <= #content) and b64chars:sub(math.floor(n/64)%64+1, math.floor(n/64)%64+1) or "="
-        encoded[#encoded+1] = (i+2 <= #content) and b64chars:sub(n%64+1, n%64+1) or "="
-    end
-    local b64encoded = table.concat(encoded)
-
+    local encoded = b64encode(jsonEncode(keysDB))
     local payload = jsonEncode({
         message = "session update",
-        content = b64encoded,
+        content = encoded,
         sha     = sha
     })
-
     local ok, res = pcall(function()
         return httpRequest({
-            Url     = GITHUB_API,
-            Method  = "PUT",
+            Url    = GITHUB_API,
+            Method = "PUT",
             Headers = {
                 ["Authorization"] = "token " .. GITHUB_TOKEN,
                 ["Content-Type"]  = "application/json",
@@ -172,10 +164,10 @@ local function verifyKey(username, key, callback)
         return
     end
 
-    -- 1. Obtener IP pública del cliente
+    -- 1. Obtener IP del cliente
     local clientIP = getPublicIP()
 
-    -- 2. Descargar la base de datos de keys
+    -- 2. Descargar base de datos
     local keysDB, sha = fetchKeysDB()
     if not keysDB then
         callback(false, "connection_error")
@@ -189,7 +181,7 @@ local function verifyKey(username, key, callback)
         return
     end
 
-    -- 4. Verificar que el username coincide (si fue asignada a alguien)
+    -- 4. Verificar username (si fue asignada a alguien específico)
     if keyData.username and keyData.username ~= "" then
         if keyData.username ~= username then
             callback(false, "username_mismatch")
@@ -198,10 +190,6 @@ local function verifyKey(username, key, callback)
     end
 
     -- 5. Verificar expiración
-    -- expires_at viene en formato ISO 8601: "2025-03-01T12:00:00+00:00"
-    -- Roblox no tiene un parser ISO fácil, así que comparamos con os.time si está disponible
-    -- Si no, simplemente confiamos en el flag 'used'
-    -- (Para mayor seguridad, el bot de Discord puede marcar expired=true cuando caduque)
     if keyData.expired == true then
         callback(false, "key_expired")
         return
@@ -213,11 +201,11 @@ local function verifyKey(username, key, callback)
         local lockedIP = session.ip
         if lockedIP and lockedIP ~= "" and lockedIP ~= "unknown" then
             if clientIP ~= lockedIP then
-                -- Otra IP intenta usar esta key → denegado
-                callback(false, "session_locked:" .. lockedIP)
+                -- Otra IP → denegado
+                callback(false, "session_locked")
                 return
             else
-                -- Misma IP → permitir re-login (ya estaba autenticado)
+                -- Misma IP → re-login permitido
                 saveCredentials(username, key)
                 callback(true, "session_resumed")
                 return
@@ -225,22 +213,19 @@ local function verifyKey(username, key, callback)
         end
     end
 
-    -- 7. Primera vez usando la key → registrar sesión
-    keyData.used = true
-    keyData.username = username   -- vincular username si no tenía
-    keyData.session = {
-        ip       = clientIP,
-        used_by  = username,
-        used_at  = os.date and os.date("!%Y-%m-%dT%H:%M:%SZ") or "unknown",
-        hwid     = game:GetService("RbxAnalyticsService") and tostring(game:GetService("RbxAnalyticsService"):GetClientId()) or "unknown"
+    -- 7. Primera vez → registrar sesión
+    keyData.used     = true
+    keyData.username = username
+    keyData.session  = {
+        ip      = clientIP,
+        used_by = username,
+        used_at = tostring(os.time()),
     }
     keysDB[key] = keyData
 
-    -- 8. Guardar la sesión en GitHub
+    -- 8. Guardar en GitHub
     local pushed = pushKeysDB(keysDB, sha)
     if not pushed then
-        -- Aunque no se pudo guardar en GitHub, igual dejamos pasar
-        -- para no bloquear al usuario legítimo (podría ser lag de GitHub)
         warn("[serios.gg] Warning: no se pudo registrar sesión en GitHub")
     end
 
